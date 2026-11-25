@@ -90,7 +90,7 @@ td.name{font-weight:700;white-space:nowrap}
         <div class="hello">Bonjour <strong>Célia</strong></div>
       </div>
     </div>
-    <span class="live"><i></i>Mis à jour en direct</span>
+    <span class="live"><i></i><span id="liveTxt">Mis à jour en direct</span></span>
   </div>
 </header>
 <div class="stripe" aria-hidden="true"></div>
@@ -105,7 +105,7 @@ td.name{font-weight:700;white-space:nowrap}
 </div>
 
 <main class="wrap" id="panelA" role="tabpanel" aria-labelledby="tabA">
-  <div class="note">Le suivi en direct démarre le mardi 1er décembre : les réponses de chacun s'afficheront ici au fil des jours.</div>
+  <div class="note" id="note">Chargement du suivi…</div>
 
   <div class="kpis">
     <div class="kpi"><div class="kpi-k">Participants</div><div class="kpi-v" id="kTotal">0</div><div class="kpi-s" id="kActive"></div></div>
@@ -141,8 +141,7 @@ td.name{font-weight:700;white-space:nowrap}
   <section class="duo">
     <div class="dark">
       <div class="kpi-k" style="color:#ADB2B6">Contenu du jeu</div>
-      <p>Questions, réponses acceptées et liste des participants se modifient dans le Google Sheet. Le calendrier se met à jour tout seul.</p>
-      <a class="btn red" href="#" id="sheetLink">Ouvrir le Google Sheet</a>
+      <p>Les questions et les réponses sont gardées sur le serveur, invisibles pour les participants. Une modification ou un participant à ajouter : demande à Rémi.</p>
     </div>
     <div class="card">
       <div class="kpi-k">Le 23 décembre</div>
@@ -156,7 +155,8 @@ td.name{font-weight:700;white-space:nowrap}
   <div class="surprise">
     <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#F5D27A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="5" rx="1"></rect><path d="M5 13v8h14v-8"></path><path d="M12 8v13"></path><path d="M12 8c-2-4-6-4-6-1.5S10 8 12 8zM12 8c2-4 6-4 6-1.5S14 8 12 8z"></path></svg>
     <h2>Toi aussi, tu as <strong>ton calendrier</strong>.</h2>
-    <p id="surpriseText">Il s'ouvre ici, une case par jour.</p>
+    <p id="surpriseText">Une case par jour ouvré, des questions rien que pour toi, et une phrase à découvrir le 23.</p>
+    <a class="btn red" id="celiaLink" href="./?c=5mzvng" target="_blank" rel="noopener">Ouvrir mon calendrier</a>
   </div>
 </main>
 
@@ -168,64 +168,60 @@ td.name{font-weight:700;white-space:nowrap}
   var BASE = 'https://remiply.github.io/avent-dalmec/?c=';
   var DAYS = [1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23];
   var LET = [1, 1, 1, 2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2];
-  var data = [
-    ['Hervé', 'mzhhbr', '-----------------', '—'],
-    ['Anousone', 'pp3gk2', '-----------------', '—'],
-    ['Sébastien', 'emv3f9', '-----------------', '—'],
-    ['Nicolas S', 'bv6tkv', '-----------------', '—'],
-    ['Matys', '8df4jw', '-----------------', '—'],
-    ['Carla', '6hzpus', '-----------------', '—'],
-    ['Jean-Christophe', 'cwa386', '-----------------', '—'],
-    ['Alexandre G', 'bxy6qx', '-----------------', '—'],
-    ['Xavier', 'a88cca', '-----------------', '—'],
-    ['Paola', '33vrxa', '-----------------', '—'],
-    ['Gildas', 'm75udg', '-----------------', '—'],
-    ['Frédéric', 'uzwjd9', '-----------------', '—'],
-    ['Fredhy', 'aedj8c', '-----------------', '—'],
-    ['Déborah', 'c5dpkh', '-----------------', '—'],
-    ['Alexandre R', 'cscr56', '-----------------', '—'],
-    ['Mathis', 'w6hs6b', '-----------------', '—'],
-    ['Nicolas H', 'j3a9bf', '-----------------', '—'],
-    ['Stéphane', 'zcguee', '-----------------', '—'],
-    ['Boubacar', 'd6fgjt', '-----------------', '—'],
-    ['Jean-Marc', 'enwpvn', '-----------------', '—'],
-    ['Sarah', 'gkgy7y', '-----------------', '—']
-  ];
+  var API = 'https://n8n.srv1593357.hstgr.cloud/webhook/avent-dalmec-2026';
+  var KEY = '';
+  try { KEY = (location.hash.match(/k=([a-z0-9]+)/i) || [])[1] || localStorage.getItem('avent-admin-k') || ''; } catch (e) {}
+  try { if (KEY) localStorage.setItem('avent-admin-k', KEY); } catch (e) {}
+  var people = [], today = 0;
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-  var people = data.map(function (p) {
-    var s = p[2], opened = 0, good = 0, letters = 0;
-    for (var i = 0; i < 16; i++) {
-      if (s[i] !== '-') opened++;
-      if (s[i] === 'B') { good++; letters += LET[i]; }
-      if (s[i] === 'M' && LET[i] === 2) letters += 1;
-    }
-    return { name: p[0], code: p[1], s: s, when: p[3], opened: opened, good: good, letters: letters, f: s[16] };
-  });
-
-  var total = people.length;
-  var active = people.filter(function (p) { return p.opened > 0 || p.f !== '-'; }).length;
-  var won = people.filter(function (p) { return p.f === 'B'; }).length;
-  var played = people.filter(function (p) { return p.f !== '-'; }).length;
-  var so = 0, sg = 0, sl = 0;
-  people.forEach(function (p) { so += p.opened; sg += p.good; sl += p.letters; });
-  $('kTotal').textContent = total;
-  $('kActive').textContent = active + ' se sont connectés au moins une fois';
-  $('kWon').textContent = won;
-  $('kPlayed').textContent = played + ' ont tenté la phrase finale';
-  $('kRate').textContent = (so ? Math.round(sg / so * 100) : 0) + ' %';
-  $('kLetters').textContent = active ? Math.round(sl / active) : 0;
-
-  var bars = '', labs = '';
-  DAYS.forEach(function (d, i) {
-    var c = people.filter(function (p) { return p.s[i] !== '-'; }).length;
-    var pct = Math.round(c / total * 100);
-    bars += '<div class="bar' + (d === 23 ? ' fin' : '') + '"><span>' + pct + ' %</span><i style="height:' + Math.max(4, Math.round(pct * 1.3)) + 'px"></i></div>';
-    labs += '<span>' + (d === 23 ? 'Finale' : d + '/12') + '</span>';
-  });
-  $('bars').innerHTML = bars;
-  $('blab').innerHTML = labs;
+  function when(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(d).replace(' ', ' à ');
+  }
+  function renderStats() {
+    var total = people.length || 21;
+    var active = people.filter(function (p) { return p.opened > 0 || p.f !== '-'; }).length;
+    var won = people.filter(function (p) { return p.f === 'B'; }).length;
+    var played = people.filter(function (p) { return p.f !== '-'; }).length;
+    var so = 0, sg = 0, sl = 0;
+    people.forEach(function (p) { so += p.opened; sg += p.good; sl += p.letters; });
+    $('kTotal').textContent = total;
+    $('kActive').textContent = active + ' se sont connectés au moins une fois';
+    $('kWon').textContent = won;
+    $('kPlayed').textContent = played + ' ont tenté la phrase finale';
+    $('kRate').textContent = (so ? Math.round(sg / so * 100) : 0) + ' %';
+    $('kLetters').textContent = active ? Math.round(sl / active) : 0;
+    var bars = '', labs = '';
+    DAYS.forEach(function (d, i) {
+      var c = people.filter(function (p) { return p.s[i] !== '-'; }).length;
+      var pct = Math.round(c / total * 100);
+      bars += '<div class="bar' + (d === 23 ? ' fin' : '') + '"><span>' + pct + ' %</span><i style="height:' + Math.max(4, Math.round(pct * 1.3)) + 'px"></i></div>';
+      labs += '<span>' + (d === 23 ? 'Finale' : d + '/12') + '</span>';
+    });
+    $('bars').innerHTML = bars;
+    $('blab').innerHTML = labs;
+  }
+  function load() {
+    if (!KEY) { $('note').textContent = "Lien incomplet : ouvre cette page avec le lien reçu par mail."; renderStats(); return; }
+    fetch(API + '?a=admin&k=' + encodeURIComponent(KEY), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (r) {
+      if (!r.ok) { $('note').textContent = "Lien incomplet : ouvre cette page avec le lien reçu par mail."; renderStats(); return; }
+      today = r.today;
+      people = r.people.map(function (p) {
+        var opened = 0;
+        for (var i = 0; i < 16; i++) if (p.strip[i] !== '-') opened++;
+        return { name: p.label, code: p.code, s: p.strip, at: p.at, when: when(p.at), opened: opened, good: p.good, letters: p.letters, f: p.strip[16] };
+      });
+      $('note').hidden = today >= 1;
+      $('note').textContent = "Le suivi en direct démarre le mardi 1er décembre : les réponses de chacun s'afficheront ici au fil des jours.";
+      $('liveTxt').textContent = 'Mis à jour à ' + new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).format(new Date());
+      renderStats(); renderRows();
+    }).catch(function () {
+      $('liveTxt').textContent = 'Connexion perdue, nouvel essai…';
+    });
+  }
 
   var filter = 'all';
   var FILTERS = [['all', 'Tous'], ['won', 'Gagnants'], ['notwon', 'Pas de cadeau']];
@@ -245,13 +241,13 @@ td.name{font-weight:700;white-space:nowrap}
     }).sort(function (a, b) {
       var wa = a.f === 'B' ? 1 : 0, wb = b.f === 'B' ? 1 : 0;
       if (wa !== wb) return wb - wa;
-      if (wa && wb) return a.when.localeCompare(b.when);
+      if (wa && wb) return String(a.at).localeCompare(String(b.at));
       return b.letters - a.letters || a.name.localeCompare(b.name);
     });
     $('rows').innerHTML = list.map(function (p) {
       var strip = p.s.split('').map(function (ch, i) {
         var last = i === 16, size = last ? 16 : 12;
-        var bg = ch === 'B' ? '#CE122D' : (ch === 'M' ? '#4D4F52' : '#FFFFFF');
+        var bg = ch === 'B' ? '#CE122D' : (ch === '-' ? '#FFFFFF' : '#4D4F52');
         var bd = last ? '2px solid #202326' : (ch === '-' ? '1px solid #BFC4C8' : '1px solid transparent');
         return '<span class="sq" style="width:' + size + 'px;height:' + size + 'px;background:' + bg + ';border:' + bd + '"></span>';
       }).join('');
@@ -278,8 +274,16 @@ td.name{font-weight:700;white-space:nowrap}
     var t = $('toast'); t.textContent = msg; t.hidden = false;
     clearTimeout(tT); tT = setTimeout(function () { t.hidden = true; }, 2600);
   }
-  ['sheetLink', 'exportLink'].forEach(function (id) {
-    $(id).addEventListener('click', function (e) { e.preventDefault(); toast('Disponible dès que le Google Sheet est branché'); });
+  $('exportLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (!people.length) { toast('Pas encore de données'); return; }
+    var lines = [['Participant', 'Bonnes réponses', 'Lettres', 'Phrase finale', 'Trouvée à', 'Parcours', 'Lien'].join(';')];
+    people.forEach(function (p) {
+      lines.push([p.name, p.good + '/16', p.letters + '/27', p.f === 'B' ? 'Trouvée' : (p.f === 'M' ? 'Ratée' : 'Pas tentée'), p.f === 'B' ? p.when : '', p.s, BASE + p.code].join(';'));
+    });
+    var blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'calendrier-avent-recap.csv';
+    document.body.appendChild(a); a.click(); a.remove();
   });
 
   /* Onglets : le deuxième n'apparaît qu'à partir du 1er décembre 2026, minuit heure de Paris */
@@ -295,6 +299,8 @@ td.name{font-weight:700;white-space:nowrap}
 
   renderFilters();
   renderRows();
+  load();
+  setInterval(load, 60000);
 })();
 </script>
 </body>
