@@ -502,6 +502,10 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       $('step4').textContent = "Le 23 décembre, remets tes lettres dans l'ordre pour découvrir la phrase. Une surprise t'attend.";
     }
     $('stMax').textContent = ' / ' + FINAL.letters;
+    if (st.demo) {
+      $('previewBar').hidden = false;
+      $('previewTxt').textContent = 'Version test · calendrier simulé au ' + (S.today >= 1 && S.today <= 31 ? dayName(S.today) : 'lancement') + ' · questions de démonstration';
+    }
     S.ready = true;
   }
 
