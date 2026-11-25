@@ -202,6 +202,11 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 .fin-top p{margin:0;color:#E4E4E4;font-size:15px;line-height:1.5}
 .fin-top .x{position:absolute;top:16px;right:16px;background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
 .fin-label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;color:var(--mute);margin:18px 0 8px}
+.blanks{display:flex;flex-wrap:wrap;gap:12px 18px;margin:4px 0 2px}
+.bw{display:inline-flex;align-items:flex-end;gap:4px}
+.bl{width:22px;height:30px;border-bottom:2px solid var(--ink);display:inline-flex;align-items:flex-end;justify-content:center;padding-bottom:2px;font-weight:800;font-size:18px;line-height:1;color:var(--red)}
+.ap{font-weight:800;font-size:20px;line-height:1;color:var(--ink)}
+@media (max-width:560px){.bl{width:18px;height:26px;font-size:16px}.blanks{gap:10px 14px}}
 .fin-clues{max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 12px;margin:0;list-style:none;font-size:14px;line-height:1.45}
 .fin-clues li{padding:6px 0;border-bottom:1px solid var(--bg);display:flex;gap:10px}
 .fin-clues li:last-child{border-bottom:none}
@@ -446,7 +451,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   var SLOTS = [null, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23, null, null];
   var Q = {};
   DAYS.slice(0, 16).forEach(function (d) { Q[d] = { n: 1, q: '', show: '' }; });
-  var FINAL = { letters: 27, words: 7, display: '', gift: '', giftOnLose: false };
+  var FINAL = { letters: 27, words: 7, pattern: '', display: '', gift: '', giftOnLose: false };
 
   /* ---------- Icônes ---------- */
   var STAR = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z';
@@ -486,7 +491,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   function applyState(st) {
     S.today = st.today;
     PERSON = st.person; NAME = st.person.first;
-    FINAL.letters = st.final.letters; FINAL.words = st.final.words;
+    FINAL.letters = st.final.letters; FINAL.words = st.final.words; FINAL.pattern = st.final.pattern || '';
     FINAL.gift = st.gift; FINAL.giftOnLose = st.giftOnLose;
     S.final = st.final.status || null; S.finalAnswer = st.final.answer || ''; S.finalAt = st.final.at || null;
     if (st.final.display) FINAL.display = st.final.display;
@@ -750,6 +755,16 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   }
 
   /* Phrase finale */
+  function blanks() {
+    return '<div class="blanks" id="blanks" aria-hidden="true">' + FINAL.pattern.split(' ').map(function (w) {
+      return '<span class="bw">' + w.split('').map(function (ch) { return ch === '_' ? '<span class="bl"></span>' : '<span class="ap">' + esc(ch) + '</span>'; }).join('') + '</span>';
+    }).join('') + '</div>';
+  }
+  function fillBlanks(val) {
+    var box = $('blanks'); if (!box) return;
+    var letters = String(val).toUpperCase().normalize('NFD').replace(/[^A-Z]/g, '').split('');
+    Array.prototype.forEach.call(box.querySelectorAll('.bl'), function (el, i) { el.textContent = letters[i] || ''; });
+  }
   function openFinal() {
     var letters = allLetters(), done = !!S.final;
     $('finalBody').innerHTML =
@@ -762,6 +777,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       '<div class="dlg-body">' +
         '<div class="fin-label" style="margin-top:0">Tes lettres</div>' +
         (letters.length ? tiles(letters, 'gold', false) : '<p class="fine" style="text-align:left">Aucune lettre pour l\'instant.</p>') +
+        (FINAL.pattern ? '<div class="fin-label">La phrase à trouver</div>' + blanks() : '') +
         (done
           ? '<p class="fine" style="text-align:left;font-size:15px;color:#202326;margin-top:18px">Ta réponse : <strong>' + esc(S.finalAnswer) + '</strong></p>' +
             '<button type="button" class="ghost" data-close2>Retour au calendrier</button>'
@@ -773,10 +789,12 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     var fb = $('finalBody');
     fb.querySelector('[data-close]').addEventListener('click', function () { closeModal('finalModal'); });
     if (done) {
+      fillBlanks(S.finalAnswer);
       fb.querySelector('[data-close2]').addEventListener('click', function () { closeModal('finalModal'); });
       openModal('finalModal', '[data-close]');
       return;
     }
+    $('finalInput').addEventListener('input', function () { fillBlanks($('finalInput').value); });
     confirmFlow($('finalInput'), $('finalSubmit'), $('finalFine'), 'Valider ma phrase', 'Accents, majuscules et petites fautes ne comptent pas.', function (val) {
       var btn = $('finalSubmit'), inp = $('finalInput');
       btn.disabled = true; inp.disabled = true; btn.textContent = 'Vérification…';
