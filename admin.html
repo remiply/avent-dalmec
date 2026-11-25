@@ -19,7 +19,6 @@ button{font-family:inherit}
 .top{background:var(--ink);color:#fff}
 .top-in{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:16px;padding-bottom:16px}
 .brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  [hidden]{display:none!important}
 .logo{background:var(--red);color:#fff;border-radius:8px;padding:5px 14px 7px;font-weight:700;font-size:22px;line-height:1.2}
 .kick{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--steel);font-weight:700}
 .hello{font-size:20px;font-weight:300;margin-top:2px}
@@ -106,13 +105,13 @@ td.name{font-weight:700;white-space:nowrap}
 </div>
 
 <main class="wrap" id="panelA" role="tabpanel" aria-labelledby="tabA">
-  <div class="note">Données d'exemple : les vrais participants apparaîtront ici dès qu'ils ouvriront leur lien.</div>
+  <div class="note">Le suivi en direct démarre le mardi 1er décembre : les réponses de chacun s'afficheront ici au fil des jours.</div>
 
   <div class="kpis">
     <div class="kpi"><div class="kpi-k">Participants</div><div class="kpi-v" id="kTotal">0</div><div class="kpi-s" id="kActive"></div></div>
     <div class="kpi"><div class="kpi-k">Phrase trouvée</div><div class="kpi-v red" id="kWon">0</div><div class="kpi-s" id="kPlayed"></div></div>
     <div class="kpi"><div class="kpi-k">Bonnes réponses</div><div class="kpi-v" id="kRate">0 %</div><div class="kpi-s">en moyenne, sur les cases ouvertes</div></div>
-    <div class="kpi"><div class="kpi-k">Lettres gagnées</div><div class="kpi-v" id="kLetters">0</div><div class="kpi-s">en moyenne, sur 25</div></div>
+    <div class="kpi"><div class="kpi-k">Lettres gagnées</div><div class="kpi-v" id="kLetters">0</div><div class="kpi-s">en moyenne, sur 27</div></div>
   </div>
 
   <section class="card">
@@ -166,30 +165,43 @@ td.name{font-weight:700;white-space:nowrap}
 <script>
 (function () {
   'use strict';
-  var BASE = 'https://remiply.github.io/avent-dalmec/?p=';
+  var BASE = 'https://remiply.github.io/avent-dalmec/?c=';
   var DAYS = [1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23];
-  var LET = [1, 1, 1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2];
+  var LET = [1, 1, 1, 2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2];
   var data = [
-    ['Carla', 'B-BBBBBMBBBBBBBBB', '23 déc. · 09:12'],
-    ['Thomas', 'BBBBBBBBBBBBBBBBB', '23 déc. · 08:47'],
-    ['Inès', 'BM-BB--BMBB-BBB-M', '—'],
-    ['Julien', 'B--M----B--------', '—'],
-    ['Sarah', 'BBBBMBBBBBBBBMBBB', '23 déc. · 10:05'],
-    ['Marco', 'MBBB-BBBBB-BBBBBM', '—'],
-    ['Léa', '-----------------', '—'],
-    ['Antoine', 'BBBBBBB-BBBBBBBB-', '—']
+    ['Hervé', 'mzhhbr', '-----------------', '—'],
+    ['Anousone', 'pp3gk2', '-----------------', '—'],
+    ['Sébastien', 'emv3f9', '-----------------', '—'],
+    ['Nicolas S', 'bv6tkv', '-----------------', '—'],
+    ['Matys', '8df4jw', '-----------------', '—'],
+    ['Carla', '6hzpus', '-----------------', '—'],
+    ['Jean-Christophe', 'cwa386', '-----------------', '—'],
+    ['Alexandre G', 'bxy6qx', '-----------------', '—'],
+    ['Xavier', 'a88cca', '-----------------', '—'],
+    ['Paola', '33vrxa', '-----------------', '—'],
+    ['Gildas', 'm75udg', '-----------------', '—'],
+    ['Frédéric', 'uzwjd9', '-----------------', '—'],
+    ['Fredhy', 'aedj8c', '-----------------', '—'],
+    ['Déborah', 'c5dpkh', '-----------------', '—'],
+    ['Alexandre R', 'cscr56', '-----------------', '—'],
+    ['Mathis', 'w6hs6b', '-----------------', '—'],
+    ['Nicolas H', 'j3a9bf', '-----------------', '—'],
+    ['Stéphane', 'zcguee', '-----------------', '—'],
+    ['Boubacar', 'd6fgjt', '-----------------', '—'],
+    ['Jean-Marc', 'enwpvn', '-----------------', '—'],
+    ['Sarah', 'gkgy7y', '-----------------', '—']
   ];
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
   var people = data.map(function (p) {
-    var s = p[1], opened = 0, good = 0, letters = 0;
+    var s = p[2], opened = 0, good = 0, letters = 0;
     for (var i = 0; i < 16; i++) {
       if (s[i] !== '-') opened++;
       if (s[i] === 'B') { good++; letters += LET[i]; }
       if (s[i] === 'M' && LET[i] === 2) letters += 1;
     }
-    return { name: p[0], s: s, when: p[2], opened: opened, good: good, letters: letters, f: s[16] };
+    return { name: p[0], code: p[1], s: s, when: p[3], opened: opened, good: good, letters: letters, f: s[16] };
   });
 
   var total = people.length;
@@ -234,7 +246,7 @@ td.name{font-weight:700;white-space:nowrap}
       var wa = a.f === 'B' ? 1 : 0, wb = b.f === 'B' ? 1 : 0;
       if (wa !== wb) return wb - wa;
       if (wa && wb) return a.when.localeCompare(b.when);
-      return b.letters - a.letters;
+      return b.letters - a.letters || a.name.localeCompare(b.name);
     });
     $('rows').innerHTML = list.map(function (p) {
       var strip = p.s.split('').map(function (ch, i) {
@@ -247,14 +259,14 @@ td.name{font-weight:700;white-space:nowrap}
       var fbg = p.f === 'B' ? '#CE122D' : (p.f === 'M' ? '#4D4F52' : '#F1F3F6');
       var ffg = p.f === '-' ? '#4D4F52' : '#FFFFFF';
       return '<tr><td class="name">' + esc(p.name) + '</td><td><div class="strip" aria-hidden="true">' + strip + '</div></td>' +
-        '<td>' + p.good + ' / 16</td><td>' + p.letters + ' / 25</td>' +
+        '<td>' + p.good + ' / 16</td><td>' + p.letters + ' / 27</td>' +
         '<td><span class="pill" style="background:' + fbg + ';color:' + ffg + '">' + fin + '</span></td>' +
         '<td style="white-space:nowrap;color:#4D4F52">' + (p.f === 'B' ? esc(p.when) : '—') + '</td>' +
-        '<td><button type="button" class="copy" data-name="' + esc(p.name) + '">Copier le lien</button></td></tr>';
+        '<td><button type="button" class="copy" data-name="' + esc(p.name) + '" data-code="' + p.code + '">Copier le lien</button></td></tr>';
     }).join('');
     Array.prototype.forEach.call($('rows').querySelectorAll('.copy'), function (b) {
       b.addEventListener('click', function () {
-        var url = BASE + encodeURIComponent(b.dataset.name);
+        var url = BASE + b.dataset.code;
         var done = function () { toast('Lien de ' + b.dataset.name + ' copié'); };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { toast(url); });
         else toast(url);
