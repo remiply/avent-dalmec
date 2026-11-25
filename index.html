@@ -286,7 +286,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 
 <header class="top">
   <div class="wrap top-in">
-    <div class="brand"><span class="logo">dalmec</span><span class="brand-txt">Calendrier de l'Avent 2026</span></div>
+    <div class="brand"><span class="logo" id="logo">dalmec</span><span class="brand-txt">Calendrier de l'Avent 2026</span></div>
     <span class="today-label" id="todayLabel"></span>
   </div>
 </header>
@@ -337,7 +337,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   </div>
   <div class="wrap stats">
     <div class="tile"><div class="tile-k">Cases ouvertes</div><div class="tile-v"><span id="stOpened">0</span><small> / 17</small></div></div>
-    <div class="tile"><div class="tile-k">Lettres récupérées</div><div class="tile-v"><span id="stIdx">0</span><small> / 27</small></div></div>
+    <div class="tile"><div class="tile-k">Lettres récupérées</div><div class="tile-v"><span id="stIdx">0</span><small id="stMax"> / 27</small></div></div>
     <div class="tile"><div class="tile-k">Phrase mystère</div><div class="tile-v"><span id="stFinal">J-20</span><small> · mer. 23 déc.</small></div></div>
   </div>
 </section>
@@ -346,7 +346,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   <div class="step"><span class="step-n">1</span><div><b>Ouvre la case du jour</b><span>Une case par jour ouvré, du 1er au 22 décembre. Elle se referme à minuit.</span></div></div>
   <div class="step"><span class="step-n">2</span><div><b>Réponds en un mot</b><span>Une seule tentative. Accents et majuscules ne comptent pas.</span></div></div>
   <div class="step"><span class="step-n">3</span><div><b>Gagne tes lettres</b><span>Case à 2 lettres : une erreur ne t'en donne qu'une. Case à 1 lettre : une erreur ne donne rien.</span></div></div>
-  <div class="step"><span class="step-n">4</span><div><b>Trouve la phrase</b><span>Le 23 décembre, remets tes lettres dans l'ordre. Le premier qui trouve gagne une surprise.</span></div></div>
+  <div class="step"><span class="step-n">4</span><div><b>Trouve la phrase</b><span id="step4">Le 23 décembre, remets tes lettres dans l'ordre. Le premier qui trouve gagne une surprise.</span></div></div>
 </section>
 
 <div class="winter">
@@ -425,7 +425,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   <div class="cel-txt" aria-live="polite">
     <h2 id="celTitle"></h2>
     <p id="celText"></p>
-    <div class="gift-card" id="giftCard"><div class="k">Et maintenant ?</div><div class="t" id="giftText"></div></div>
+    <div class="gift-card" id="giftCard"><div class="k" id="giftK">Et maintenant ?</div><div class="t" id="giftText"></div></div>
     <button type="button" class="ghost" id="celClose">Retour au calendrier</button>
   </div>
 </div>
@@ -435,36 +435,17 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   'use strict';
 
   /* ---------- Contenu ---------- */
-  var PEOPLE = {"mzhhbr": ["Hervé", "Hervé"], "pp3gk2": ["Anousone", "Anousone"], "emv3f9": ["Sébastien", "Sébastien"], "bv6tkv": ["Nicolas", "Nicolas S"], "8df4jw": ["Matys", "Matys"], "6hzpus": ["Carla", "Carla"], "cwa386": ["Jean-Christophe", "Jean-Christophe"], "bxy6qx": ["Alexandre", "Alexandre G"], "a88cca": ["Xavier", "Xavier"], "33vrxa": ["Paola", "Paola"], "m75udg": ["Gildas", "Gildas"], "uzwjd9": ["Frédéric", "Frédéric"], "aedj8c": ["Fredhy", "Fredhy"], "c5dpkh": ["Déborah", "Déborah"], "cscr56": ["Alexandre", "Alexandre R"], "w6hs6b": ["Mathis", "Mathis"], "j3a9bf": ["Nicolas", "Nicolas H"], "zcguee": ["Stéphane", "Stéphane"], "d6fgjt": ["Boubacar", "Boubacar"], "enwpvn": ["Jean-Marc", "Jean-Marc"], "gkgy7y": ["Sarah", "Sarah"]};
+  var API = 'https://n8n.srv1593357.hstgr.cloud/webhook/avent-dalmec-2026';
   var params = new URLSearchParams(location.search);
-  var CODE = (params.get('c') || '').toLowerCase();
-  var PERSON = PEOPLE[CODE] || null;
-  var NAME = PERSON ? PERSON[0] : '';
+  var CODE = (params.get('c') || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  var TESTK = params.get('t') || '';
+  var PREVIEW = TESTK && params.get('jour') ? Math.max(0, Math.min(23, +params.get('jour') || 0)) : null;
+  var PERSON = null, NAME = '';
   var DAYS = [1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23];
   var SLOTS = [null, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23, null, null];
-  var Q = {
-    1: { q: "Dans quel pays un chat géant de Noël dévore-t-il ceux qui n'ont pas reçu de vêtements neufs ?", a: ['islande'], show: "l'Islande", l: ['E'] },
-    2: { q: "Dans quel pays Dalmec est-il né ?", a: ['italie'], show: "l'Italie", l: ['L'] },
-    3: { q: "Dans quelle ville de Laponie finlandaise se trouve le village officiel du Père Noël ?", a: ['rovaniemi'], show: 'Rovaniemi', l: ['O'] },
-    4: { q: "Je suis plein de trous, mais je retiens l'eau. Qui suis-je ?", a: ['eponge'], show: "l'éponge", l: ['E', 'R'] },
-    7: { q: "Quelle est la seule source d'énergie des manipulateurs Dalmec ?", a: ['aircomprime', 'air'], show: "l'air comprimé", l: ['N'] },
-    8: { q: "En Italie, quelle sorcière apporte les cadeaux aux enfants le 6 janvier ?", a: ['befana', 'labefana'], show: 'la Befana', l: ['E', 'L'] },
-    9: { q: "Qu'est-ce qui monte et ne redescend jamais ?", a: ['age'], show: "l'âge", l: ['E', 'U'] },
-    10: { q: "Quel compositeur a écrit le ballet Casse-Noisette ?", a: ['tchaikovski', 'tchaikovsky', 'tchaikowsky'], show: 'Tchaïkovski', l: ['R', 'E'] },
-    11: { q: "Plus on m'enlève de quelque chose, plus je deviens grand. Qui suis-je ?", a: ['trou'], show: 'le trou', l: ['N', 'E'] },
-    14: { q: "Dans quelle ville italienne se trouve l'usine historique de Dalmec ?", a: ['cles'], show: 'Cles', l: ['A'] },
-    15: { q: "Comment s'appelle le renne au nez rouge du Père Noël ?", a: ['rudolph', 'rudolf', 'rodolphe'], show: 'Rudolph', l: ['E', 'M'] },
-    16: { q: "Quelle plante, sous laquelle on s'embrasse à Noël, porte des baies blanches ?", a: ['gui'], show: 'le gui', l: ['L', 'P'] },
-    17: { q: "Combien de branches compte un flocon de neige ?", a: ['6', 'six'], show: 'six', l: ['D', 'E'] },
-    18: { q: "De quel nom de famille vient le « Dal » de Dalmec ?", a: ['dallago'], show: 'Dallago', l: ['M', 'V'] },
-    21: { q: "Il est à toi, mais les autres l'utilisent plus que toi. Qui suis-je ?", a: ['prenom', 'nom', 'tonprenom', 'tonnom'], show: 'ton prénom', l: ['D', 'C'] },
-    22: { q: "Chez Dickens, quel vieil avare reçoit trois fantômes la nuit de Noël ?", a: ['scrooge', 'ebenezerscrooge'], show: 'Scrooge', l: ['M', 'E'] }
-  };
-  var FINAL = {
-    accept: ['memeleperenoelrevedundalmec'],
-    display: "Même le Père Noël rêve d'un Dalmec",
-    letters: 27, words: 7
-  };
+  var Q = {};
+  DAYS.slice(0, 16).forEach(function (d) { Q[d] = { n: 1, q: '', show: '' }; });
+  var FINAL = { letters: 27, words: 7, display: '', gift: '', giftOnLose: false };
 
   /* ---------- Icônes ---------- */
   var STAR = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z';
@@ -486,35 +467,6 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   function caseOf(d) { return DAYS.indexOf(d) + 1; }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function $(id) { return document.getElementById(id); }
-  function norm(s) {
-    var t = String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-    t = t.replace(/^(le|la|les|l|un|une|des|du|en|a|au|aux) /, '');
-    return t.replace(/ /g, '');
-  }
-  function lev(a, b) {
-    var m = a.length, n = b.length, d = [], i, j;
-    for (i = 0; i <= m; i++) { d[i] = [i]; }
-    for (j = 0; j <= n; j++) { d[0][j] = j; }
-    for (i = 1; i <= m; i++) {
-      for (j = 1; j <= n; j++) {
-        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      }
-    }
-    return d[m][n];
-  }
-  function isRight(input, accepts) {
-    var n = norm(input);
-    if (!n) return false;
-    for (var i = 0; i < accepts.length; i++) {
-      var acc = accepts[i];
-      if (n === acc) return true;
-      if (/^\d+$/.test(acc)) continue;
-      var tol = acc.length <= 4 ? 0 : (acc.length <= 7 ? 1 : 2);
-      if (tol && lev(n, acc) <= tol) return true;
-    }
-    return false;
-  }
   function tiles(letters, cls, animate) {
     return '<div class="tiles">' + letters.map(function (L, i) {
       return '<span class="tl' + (cls ? ' ' + cls : '') + (animate ? ' pop' : '') + '"' + (animate ? ' style="animation-delay:' + (0.15 + i * 0.18).toFixed(2) + 's"' : '') + '>' + esc(L) + '</span>';
@@ -522,33 +474,38 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   }
 
   /* ---------- État ---------- */
-  function parisDay() {
-    var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()).split('-');
-    var y = +parts[0], m = +parts[1], d = +parts[2];
-    if (y < 2026 || (y === 2026 && m < 12)) return 0;
-    if (y > 2026) return 99;
-    return d;
-  }
-  var PREVIEW = params.get('jour') ? Math.max(0, Math.min(23, +params.get('jour') || 0)) : null;
-  var KEY = 'avent2026-' + (CODE || 'invite');
-  function load() {
-    try { var raw = localStorage.getItem(KEY); if (raw && PREVIEW === null) return JSON.parse(raw); } catch (err) {}
-    return null;
-  }
-  function save() {
-    if (PREVIEW !== null) return;
-    try { localStorage.setItem(KEY, JSON.stringify({ res: S.res, pick: S.pick, final: S.final, finalAnswer: S.finalAnswer, finalAt: S.finalAt || null })); } catch (err) {}
-  }
-  var saved = load() || {};
-  var S = { today: PREVIEW !== null ? PREVIEW : parisDay(), res: saved.res || {}, pick: saved.pick || {}, final: saved.final || null, finalAnswer: saved.finalAnswer || '', finalAt: saved.finalAt || null };
+  var S = { ready: false, err: false, today: 0, res: {}, pick: {}, got: {}, final: null, finalAnswer: '', finalAt: null };
   var freshDay = null, lastFocus = null;
 
-  function gained(d) {
-    var r = S.res[d], L = Q[d].l;
-    if (r === 'good') return L;
-    if (r === 'half') return [L[0]];
-    return [];
+  function api(q) {
+    var u = API + '?c=' + encodeURIComponent(CODE) + '&' + q;
+    if (TESTK) u += '&t=' + encodeURIComponent(TESTK) + (PREVIEW !== null ? '&jour=' + PREVIEW : '');
+    return fetch(u, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); });
   }
+  function applyState(st) {
+    S.today = st.today;
+    PERSON = st.person; NAME = st.person.first;
+    FINAL.letters = st.final.letters; FINAL.words = st.final.words;
+    FINAL.gift = st.gift; FINAL.giftOnLose = st.giftOnLose;
+    S.final = st.final.status || null; S.finalAnswer = st.final.answer || ''; S.finalAt = st.final.at || null;
+    if (st.final.display) FINAL.display = st.final.display;
+    S.res = {}; S.pick = {}; S.got = {};
+    Object.keys(st.days).forEach(function (k) {
+      var d = +k, x = st.days[k];
+      Q[d] = { n: x.n, q: x.q || '', show: x.show || '' };
+      if (x.status) { S.res[d] = x.status; S.pick[d] = x.pick; S.got[d] = x.gained || []; }
+    });
+    if (st.brand && st.brand !== 'dalmec') {
+      document.title = 'Calendrier de ' + NAME;
+      $('logo').textContent = st.brand;
+      $('giftK').textContent = 'Ton cadeau';
+      $('step4').textContent = "Le 23 décembre, remets tes lettres dans l'ordre pour découvrir la phrase. Une surprise t'attend.";
+    }
+    $('stMax').textContent = ' / ' + FINAL.letters;
+    S.ready = true;
+  }
+
+  function gained(d) { return S.got[d] || []; }
   function allLetters() {
     var out = [];
     DAYS.slice(0, 16).forEach(function (d) { out = out.concat(gained(d)); });
@@ -566,7 +523,10 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     $('helloH').innerHTML = NAME ? 'Bonjour <strong>' + esc(NAME) + '</strong>,' : 'Bonjour,';
     $('todayLabel').textContent = S.today >= 1 && S.today <= 31 ? dayName(S.today) : 'Décembre 2026';
     var lead;
-    if (!PERSON) lead = "Ce calendrier est personnel : ouvre-le avec le lien que tu as reçu par mail.";
+    if (!CODE) lead = "Ce calendrier est personnel : ouvre-le avec le lien que tu as reçu par mail.";
+    else if (S.err === 'unknown') lead = "Ce lien n'est pas reconnu. Ouvre ton calendrier avec le lien reçu par mail.";
+    else if (S.err) lead = "Impossible de charger ton calendrier pour l'instant. Recharge la page dans un moment.";
+    else if (!S.ready) lead = "Chargement de ton calendrier…";
     else if (S.today < 1) lead = "Ton calendrier ouvre le mardi 1er décembre. Chaque jour ouvré, une question, des lettres à gagner, et le 23 décembre une phrase mystère à découvrir.";
     else if (S.today > 23) lead = "Le calendrier est terminé. Merci d'avoir joué, et joyeuses fêtes !";
     else if (S.today === 23) lead = "C'est le grand jour ! Remets tes lettres dans l'ordre pour découvrir la phrase mystère.";
@@ -591,7 +551,9 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       }
       var n = caseOf(d), isFinal = d === 23, r = S.res[d];
       var cls = 'cell', sub = '', icon = '', bow = false, live = false;
-      if (isFinal) {
+      if (!S.ready) { cls += ' future w' + (n % 4); sub = isFinal ? 'Phrase mystère' : 'Verrouillée'; icon = isFinal ? I.star : I.lock; }
+      if (!S.ready) {}
+      else if (isFinal) {
         cls += ' final'; icon = I.star;
         if (S.today === 23) {
           live = true; cls += ' live';
@@ -600,7 +562,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
         } else sub = 'Phrase mystère';
       } else if (r) {
         live = d === S.today;
-        if (r === 'good') { cls += ' done'; sub = Q[d].l.length === 2 ? '2 lettres' : '1 lettre'; icon = I.starGold; }
+        if (r === 'good') { cls += ' done'; sub = Q[d].n === 2 ? '2 lettres' : '1 lettre'; icon = I.starGold; }
         else if (r === 'half') { cls += ' partial'; sub = '1 lettre sur 2'; icon = I.check; }
         else { cls += ' missed'; sub = 'Pas de lettre'; icon = I.miss; }
         if (live) cls += ' again';
@@ -629,11 +591,11 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     var g = $('idxGrid');
     g.innerHTML = '';
     DAYS.slice(0, 16).forEach(function (d, i) {
-      var k = i + 1, r = S.res[d], cls = 'ic', body, extra = '', nb = Q[d].l.length;
+      var k = i + 1, r = S.res[d], cls = 'ic', body, extra = '', nb = Q[d].n;
       if (r === 'good') { cls += ' got'; body = tiles(gained(d), '', freshDay === d); }
       else if (r === 'half') { cls += ' got'; body = tiles(gained(d), '', freshDay === d) + '<div class="t" style="margin-top:6px">1 lettre sur 2</div>'; }
       else if (r === 'bad') { cls += ' miss'; body = '<div class="t">Pas de lettre ce jour-là</div>'; }
-      else if (d < S.today) { cls += ' miss'; body = '<div class="t">Case manquée</div>'; }
+      else if (S.ready && d < S.today) { cls += ' miss'; body = '<div class="t">Case manquée</div>'; }
       else {
         cls += ' w' + (k % 4); extra = I.lockSm;
         body = '<div class="t">' + (d === S.today ? "Aujourd'hui" : 'Le ' + d + ' déc.') + ' · ' + nb + (nb === 2 ? ' lettres' : ' lettre') + ' à gagner</div>';
@@ -711,7 +673,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 
   /* Case du jour */
   function openDay(d) {
-    var n = caseOf(d), q = Q[d], nb = q.l.length;
+    var n = caseOf(d), q = Q[d], nb = q.n;
     $('dayBody').innerHTML =
       '<div class="dlg-head"><span class="kicker">Case ' + n + ' · ' + dayName(d) + '</span>' +
       '<button type="button" class="x" data-close aria-label="Fermer">' + I.close + '</button></div>' +
@@ -731,13 +693,21 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       return;
     }
     confirmFlow($('dayInput'), $('daySubmit'), $('dayFine'), 'Valider ma réponse', 'Un seul mot. Accents et majuscules ne comptent pas.', function (val) {
-      var ok = isRight(val, q.a);
-      S.res[d] = ok ? 'good' : (nb === 2 ? 'half' : 'bad');
-      S.pick[d] = val;
-      freshDay = d;
-      save();
-      showDayResult(d, true);
-      renderAll();
+      var btn = $('daySubmit'), inp = $('dayInput');
+      btn.disabled = true; inp.disabled = true; btn.textContent = 'Vérification…';
+      api('a=answer&d=' + d + '&v=' + encodeURIComponent(val)).then(function (r) {
+        if (r.ok) {
+          S.res[d] = r.status; S.pick[d] = r.pick; S.got[d] = r.gained; Q[d].show = r.show;
+          freshDay = d;
+          showDayResult(d, true);
+          renderAll();
+        } else if (r.error === 'already' || r.error === 'closed') {
+          return api('a=state').then(function (st) { applyState(st); closeModal('dayModal'); renderAll(); });
+        } else throw new Error(r.error);
+      }).catch(function () {
+        btn.disabled = false; inp.disabled = false; btn.classList.remove('confirm'); btn.textContent = 'Réessayer';
+        $('dayFine').textContent = "Connexion impossible, ta réponse n'est pas partie. Réessaie dans un instant.";
+      });
     });
     openModal('dayModal', '#dayInput');
   }
@@ -800,14 +770,23 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       return;
     }
     confirmFlow($('finalInput'), $('finalSubmit'), $('finalFine'), 'Valider ma phrase', 'Accents, majuscules et petites fautes ne comptent pas.', function (val) {
-      var win = isRight(val, FINAL.accept);
-      S.final = win ? 'win' : 'lose';
-      S.finalAnswer = val;
-      S.finalAt = new Date().toISOString();
-      save();
-      $('finalModal').hidden = true;
-      renderAll();
-      celebrate(win);
+      var btn = $('finalSubmit'), inp = $('finalInput');
+      btn.disabled = true; inp.disabled = true; btn.textContent = 'Vérification…';
+      api('a=final&v=' + encodeURIComponent(val)).then(function (r) {
+        if (r.ok) {
+          var win = r.status === 'win';
+          S.final = r.status; S.finalAnswer = r.answer; S.finalAt = r.at; FINAL.display = r.display;
+          $('finalModal').hidden = true;
+          document.body.style.overflow = '';
+          renderAll();
+          celebrate(win);
+        } else if (r.error === 'already' || r.error === 'closed') {
+          return api('a=state').then(function (st) { applyState(st); closeModal('finalModal'); renderAll(); });
+        } else throw new Error(r.error);
+      }).catch(function () {
+        btn.disabled = false; inp.disabled = false; btn.classList.remove('confirm'); btn.textContent = 'Réessayer';
+        $('finalFine').textContent = "Connexion impossible, ta phrase n'est pas partie. Réessaie dans un instant.";
+      });
     });
     openModal('finalModal', '#finalInput');
   }
@@ -825,9 +804,9 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     $('celTitle').innerHTML = win ? 'Bravo <strong>' + esc(NAME) + '</strong> !' : 'Presque, <strong>' + esc(NAME) + '</strong>…';
     $('celText').textContent = win
       ? 'La phrase était bien : « ' + FINAL.display + ' ».'
-      : 'La phrase était : « ' + FINAL.display + ' ». Merci d\'avoir joué jusqu\'au bout !';
-    $('giftCard').hidden = !win;
-    $('giftText').textContent = 'Célia annonce le ou les gagnants très vite.';
+      : 'La phrase était : « ' + FINAL.display + ' ». ' + (FINAL.giftOnLose ? 'Ton cadeau t\'attend quand même.' : 'Merci d\'avoir joué jusqu\'au bout !');
+    $('giftCard').hidden = !(win || FINAL.giftOnLose);
+    $('giftText').textContent = FINAL.gift;
     if (win) {
       celTimers.push(setTimeout(function () { burst($('confBox'), 90, 420, ['#CE122D', '#D9AE4E', '#FFFFFF', '#F5D27A', '#B50F27']); }, 2050));
       celTimers.push(setTimeout(function () { burst($('confBox'), 50, 300, ['#FFFFFF', '#F5D27A', '#CE122D']); }, 2600));
@@ -856,7 +835,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 
   if (PREVIEW !== null) {
     $('previewBar').hidden = false;
-    $('previewTxt').textContent = 'Aperçu au ' + (S.today >= 1 ? dayName(S.today) : 'lancement') + ' · les réponses ne sont pas enregistrées';
+    $('previewTxt').textContent = 'Aperçu au ' + (PREVIEW >= 1 ? dayName(PREVIEW) : 'lancement') + ' · les réponses ne sont pas enregistrées';
   }
 
   /* ---------- Décor ---------- */
@@ -957,6 +936,12 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   snow($('celSnow'), 40);
   snow($('snow2'), 30, 22, 14);
   renderAll();
+  if (CODE) {
+    api('a=state').then(function (st) {
+      if (!st.ok) { S.err = st.error || 'x'; } else applyState(st);
+      renderAll();
+    }).catch(function () { S.err = 'net'; renderAll(); });
+  }
 })();
 </script>
 </body>
