@@ -172,7 +172,7 @@ td.name{font-weight:700;white-space:nowrap}
   var KEY = '';
   try { KEY = (location.hash.match(/k=([a-z0-9]+)/i) || [])[1] || localStorage.getItem('avent-admin-k') || ''; } catch (e) {}
   try { if (KEY) localStorage.setItem('avent-admin-k', KEY); } catch (e) {}
-  var people = [], today = 0;
+  var people = [], demoPeople = [], today = 0;
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
@@ -209,11 +209,13 @@ td.name{font-weight:700;white-space:nowrap}
     fetch(API + '?a=admin&k=' + encodeURIComponent(KEY), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (r) {
       if (!r.ok) { $('note').textContent = "Lien incomplet : ouvre cette page avec le lien reçu par mail."; renderStats(); return; }
       today = r.today;
-      people = r.people.map(function (p) {
+      var conv = function (p) {
         var opened = 0;
         for (var i = 0; i < 16; i++) if (p.strip[i] !== '-') opened++;
         return { name: p.label, code: p.code, s: p.strip, at: p.at, when: when(p.at), opened: opened, good: p.good, letters: p.letters, f: p.strip[16] };
-      });
+      };
+      people = r.people.map(conv);
+      demoPeople = (r.demo || []).map(conv);
       $('note').hidden = today >= 1;
       $('note').textContent = "Le suivi en direct démarre le mardi 1er décembre : les réponses de chacun s'afficheront ici au fil des jours.";
       $('liveTxt').textContent = 'Mis à jour à ' + new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).format(new Date());
@@ -244,6 +246,7 @@ td.name{font-weight:700;white-space:nowrap}
       if (wa && wb) return String(a.at).localeCompare(String(b.at));
       return b.letters - a.letters || a.name.localeCompare(b.name);
     });
+    list = demoPeople.concat(list);
     $('rows').innerHTML = list.map(function (p) {
       var strip = p.s.split('').map(function (ch, i) {
         var last = i === 16, size = last ? 16 : 12;
