@@ -17,6 +17,7 @@
 html,body{margin:0}
 body{font-family:Raleway,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
 button{font-family:inherit}
+[hidden]{display:none!important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .wrap{max-width:1120px;margin:0 auto;padding-left:20px;padding-right:20px}
 
@@ -129,6 +130,19 @@ h2{margin:0;font-size:24px;font-weight:800;letter-spacing:2px;text-transform:upp
 .ic.new{animation:pop .7s ease}
 @keyframes pop{0%{transform:scale(.88);opacity:0}60%{transform:scale(1.03)}100%{transform:none;opacity:1}}
 .blur{filter:blur(4px);user-select:none}
+
+.demo-sel{min-height:36px;border-radius:18px;padding:0 12px;background:#fff;color:var(--ink);font-weight:700;font-size:13px;font-family:inherit;border:none}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tl{width:34px;height:42px;border-radius:6px;background:#F1F3F6;color:var(--ink);font-weight:800;font-size:22px;display:inline-flex;align-items:center;justify-content:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
+.tl.gold{background:var(--ink);color:var(--gold-soft);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
+.clue .tl{background:#FFFFFF;color:var(--ink)}
+.clue .tl.gold{background:var(--gold-soft);color:var(--ink)}
+.clue .tiles{margin-top:10px}
+.ic .tiles{margin-top:8px}
+.ic .tl{width:28px;height:34px;font-size:18px;background:var(--ink);color:var(--gold-soft)}
+.tl.pop{animation:tlpop .55s cubic-bezier(.2,.8,.3,1.4) both}
+@keyframes tlpop{from{transform:scale(.3) rotate(-20deg);opacity:0}}
+.fin-top + .dlg-body .tiles{margin-bottom:4px}
 
 /* Partie basse : hiver */
 .winter{position:relative;overflow:hidden;background:linear-gradient(180deg,#F1F3F6 0%,#EDF3F0 45%,#F6F1E9 100%)}
@@ -263,13 +277,10 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 </head>
 <body>
 
-<div class="demo" role="region" aria-label="Mode démo">
+<div class="demo" role="region" aria-label="Aperçu" id="previewBar" hidden>
   <div class="wrap demo-in">
-    <span class="demo-tag">Démo</span>
-    <span class="demo-txt">Simuler le</span>
-    <button type="button" class="demo-btn" data-scn="3" aria-pressed="true">3 déc. · case du jour</button>
-    <button type="button" class="demo-btn" data-scn="23" aria-pressed="false">23 déc. · finale</button>
-    <button type="button" class="demo-btn demo-reset" id="demoReset">Recommencer</button>
+    <span class="demo-tag">Aperçu</span>
+    <span class="demo-txt" id="previewTxt"></span>
   </div>
 </div>
 
@@ -295,7 +306,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   <div class="wrap hero-in">
     <div class="hero-txt">
       <p class="eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" fill="currentColor"></path></svg>Ton calendrier personnel</p>
-      <h1>Bonjour <strong id="nameH">Carla</strong>,</h1>
+      <h1 id="helloH">Bonjour,</h1>
       <p class="lead" id="lead"></p>
     </div>
     <svg class="robot" width="340" height="240" viewBox="0 0 340 240" aria-hidden="true">
@@ -326,15 +337,16 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   </div>
   <div class="wrap stats">
     <div class="tile"><div class="tile-k">Cases ouvertes</div><div class="tile-v"><span id="stOpened">0</span><small> / 17</small></div></div>
-    <div class="tile"><div class="tile-k">Indices récupérés</div><div class="tile-v"><span id="stIdx">0</span><small id="stIdxNote"> / 16</small></div></div>
-    <div class="tile"><div class="tile-k">Question finale</div><div class="tile-v"><span id="stFinal">J-20</span><small> · mer. 23 déc.</small></div></div>
+    <div class="tile"><div class="tile-k">Lettres récupérées</div><div class="tile-v"><span id="stIdx">0</span><small> / 27</small></div></div>
+    <div class="tile"><div class="tile-k">Phrase mystère</div><div class="tile-v"><span id="stFinal">J-20</span><small> · mer. 23 déc.</small></div></div>
   </div>
 </section>
 
-<section class="wrap how" aria-label="Comment ça marche">
-  <div class="step"><span class="step-n">1</span><div><b>Ouvre la case du jour</b><span>Une case par jour ouvré. Elle se referme à minuit.</span></div></div>
-  <div class="step"><span class="step-n">2</span><div><b>Réponds à la question</b><span>Une seule tentative : choisis bien.</span></div></div>
-  <div class="step"><span class="step-n">3</span><div><b>Garde ton indice</b><span>Le 23 décembre, tes indices mènent à la réponse finale.</span></div></div>
+<section class="wrap how" aria-label="Règles du jeu">
+  <div class="step"><span class="step-n">1</span><div><b>Ouvre la case du jour</b><span>Une case par jour ouvré, du 1er au 22 décembre. Elle se referme à minuit.</span></div></div>
+  <div class="step"><span class="step-n">2</span><div><b>Réponds en un mot</b><span>Une seule tentative. Accents et majuscules ne comptent pas.</span></div></div>
+  <div class="step"><span class="step-n">3</span><div><b>Gagne tes lettres</b><span>Case à 2 lettres : une erreur ne t'en donne qu'une. Case à 1 lettre : une erreur ne donne rien.</span></div></div>
+  <div class="step"><span class="step-n">4</span><div><b>Trouve la phrase</b><span>Le 23 décembre, remets tes lettres dans l'ordre. Le premier qui trouve gagne une surprise.</span></div></div>
 </section>
 
 <div class="winter">
@@ -355,8 +367,8 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 </main>
 
 <section class="wrap idx">
-  <h2><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" fill="#D9AE4E"></path></svg>Mes indices</h2>
-  <p class="note">Garde-les précieusement : le 23 décembre, la question finale fera appel à tous.</p>
+  <h2><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" fill="#D9AE4E"></path></svg>Mes lettres</h2>
+  <p class="note">Le 23 décembre, remets-les dans l'ordre pour découvrir la phrase mystère.</p>
   <div class="idx-grid" id="idxGrid"></div>
 </section>
 
@@ -376,7 +388,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 </div>
 
 <div class="modal" id="finalModal" hidden>
-  <div class="dialog" role="dialog" aria-modal="true" aria-label="Question finale" id="finalDialog">
+  <div class="dialog" role="dialog" aria-modal="true" aria-label="Phrase mystère" id="finalDialog">
     <div id="finalBody"></div>
   </div>
 </div>
@@ -413,7 +425,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   <div class="cel-txt" aria-live="polite">
     <h2 id="celTitle"></h2>
     <p id="celText"></p>
-    <div class="gift-card" id="giftCard"><div class="k">Ton cadeau</div><div class="t" id="giftText"></div></div>
+    <div class="gift-card" id="giftCard"><div class="k">Et maintenant ?</div><div class="t" id="giftText"></div></div>
     <button type="button" class="ghost" id="celClose">Retour au calendrier</button>
   </div>
 </div>
@@ -422,42 +434,36 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
 (function () {
   'use strict';
 
-  /* ---------- Contenu (exemples, à remplacer par celui de Célia) ---------- */
+  /* ---------- Contenu ---------- */
+  var PEOPLE = {"mzhhbr": ["Hervé", "Hervé"], "pp3gk2": ["Anousone", "Anousone"], "emv3f9": ["Sébastien", "Sébastien"], "bv6tkv": ["Nicolas", "Nicolas S"], "8df4jw": ["Matys", "Matys"], "6hzpus": ["Carla", "Carla"], "cwa386": ["Jean-Christophe", "Jean-Christophe"], "bxy6qx": ["Alexandre", "Alexandre G"], "a88cca": ["Xavier", "Xavier"], "33vrxa": ["Paola", "Paola"], "m75udg": ["Gildas", "Gildas"], "uzwjd9": ["Frédéric", "Frédéric"], "aedj8c": ["Fredhy", "Fredhy"], "c5dpkh": ["Déborah", "Déborah"], "cscr56": ["Alexandre", "Alexandre R"], "w6hs6b": ["Mathis", "Mathis"], "j3a9bf": ["Nicolas", "Nicolas H"], "zcguee": ["Stéphane", "Stéphane"], "d6fgjt": ["Boubacar", "Boubacar"], "enwpvn": ["Jean-Marc", "Jean-Marc"], "gkgy7y": ["Sarah", "Sarah"]};
   var params = new URLSearchParams(location.search);
-  var NAME = (params.get('p') || 'Carla').replace(/[<>&"]/g, '').slice(0, 30);
-
+  var CODE = (params.get('c') || '').toLowerCase();
+  var PERSON = PEOPLE[CODE] || null;
+  var NAME = PERSON ? PERSON[0] : '';
   var DAYS = [1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23];
   var SLOTS = [null, 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23, null, null];
-
-  var CLUES = [
-    "Je ne travaille qu'une seule nuit par an.",
-    "Comme Dalmec, je porte du rouge.",
-    "On me rend visite à Rovaniemi.",
-    "Ma barbe est blanche.",
-    "Je me déplace en traîneau.",
-    "Mon équipe de lutins est très productive.",
-    "Mes rennes gèrent la logistique.",
-    "Je passe par les cheminées.",
-    "Je reçois des millions de lettres.",
-    "Mon atelier se trouve au pôle Nord.",
-    "Je ris en disant « Oh oh oh ».",
-    "On me laisse des biscuits et du lait.",
-    "Je livre le monde entier en une nuit.",
-    "Je vérifie ma liste deux fois.",
-    "Les anglophones m'appellent Santa.",
-    "On m'attend le soir du 24 décembre."
-  ];
-
-  var QUESTIONS = {
-    3: { q: "Quelle ville de Laponie finlandaise accueille le village officiel du Père Noël ?", choices: ["Oulu", "Rovaniemi", "Tromsø", "Kiruna"], answer: "Rovaniemi" }
+  var Q = {
+    1: { q: "Dans quel pays un chat géant de Noël dévore-t-il ceux qui n'ont pas reçu de vêtements neufs ?", a: ['islande'], show: "l'Islande", l: ['E'] },
+    2: { q: "Dans quel pays Dalmec est-il né ?", a: ['italie'], show: "l'Italie", l: ['L'] },
+    3: { q: "Dans quelle ville de Laponie finlandaise se trouve le village officiel du Père Noël ?", a: ['rovaniemi'], show: 'Rovaniemi', l: ['O'] },
+    4: { q: "Je suis plein de trous, mais je retiens l'eau. Qui suis-je ?", a: ['eponge'], show: "l'éponge", l: ['E', 'R'] },
+    7: { q: "Quelle est la seule source d'énergie des manipulateurs Dalmec ?", a: ['aircomprime', 'air'], show: "l'air comprimé", l: ['N'] },
+    8: { q: "En Italie, quelle sorcière apporte les cadeaux aux enfants le 6 janvier ?", a: ['befana', 'labefana'], show: 'la Befana', l: ['E', 'L'] },
+    9: { q: "Qu'est-ce qui monte et ne redescend jamais ?", a: ['age'], show: "l'âge", l: ['E', 'U'] },
+    10: { q: "Quel compositeur a écrit le ballet Casse-Noisette ?", a: ['tchaikovski', 'tchaikovsky', 'tchaikowsky'], show: 'Tchaïkovski', l: ['R', 'E'] },
+    11: { q: "Plus on m'enlève de quelque chose, plus je deviens grand. Qui suis-je ?", a: ['trou'], show: 'le trou', l: ['N', 'E'] },
+    14: { q: "Dans quelle ville italienne se trouve l'usine historique de Dalmec ?", a: ['cles'], show: 'Cles', l: ['A'] },
+    15: { q: "Comment s'appelle le renne au nez rouge du Père Noël ?", a: ['rudolph', 'rudolf', 'rodolphe'], show: 'Rudolph', l: ['E', 'M'] },
+    16: { q: "Quelle plante, sous laquelle on s'embrasse à Noël, porte des baies blanches ?", a: ['gui'], show: 'le gui', l: ['L', 'P'] },
+    17: { q: "Combien de branches compte un flocon de neige ?", a: ['6', 'six'], show: 'six', l: ['D', 'E'] },
+    18: { q: "De quel nom de famille vient le « Dal » de Dalmec ?", a: ['dallago'], show: 'Dallago', l: ['M', 'V'] },
+    21: { q: "Il est à toi, mais les autres l'utilisent plus que toi. Qui suis-je ?", a: ['prenom', 'nom', 'tonprenom', 'tonnom'], show: 'ton prénom', l: ['D', 'C'] },
+    22: { q: "Chez Dickens, quel vieil avare reçoit trois fantômes la nuit de Noël ?", a: ['scrooge', 'ebenezerscrooge'], show: 'Scrooge', l: ['M', 'E'] }
   };
-  var DEFAULT_Q = { q: "[Question du jour, rédigée par Célia]", choices: ["[Réponse A]", "[Réponse B]", "[Réponse C]", "[Réponse D]"], answer: "[Réponse A]" };
-
   var FINAL = {
-    q: "Qui suis-je ?",
-    accept: ["pere noel", "papa noel", "santa claus", "santa", "father christmas"],
-    display: "le Père Noël",
-    gift: "[À définir avec Célia]"
+    accept: ['memeleperenoelrevedundalmec'],
+    display: "Même le Père Noël rêve d'un Dalmec",
+    letters: 27, words: 7
   };
 
   /* ---------- Icônes ---------- */
@@ -468,7 +474,6 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     check: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CE122D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>',
     checkLg: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CE122D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>',
     miss: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"></path></svg>',
-    arrow: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg>',
     star: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR + '" fill="#F5D27A"></path></svg>',
     starGold: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="' + STAR + '" fill="#D9AE4E"></path></svg>',
     close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>',
@@ -480,55 +485,98 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   function dayName(d) { return WD[new Date(2026, 11, d).getDay()] + ' ' + d + ' décembre'; }
   function caseOf(d) { return DAYS.indexOf(d) + 1; }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  function norm(s) {
-    return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(le|la|les|l) /, '');
-  }
-  function partial(text) {
-    var w = text.split(' ');
-    var cut = Math.ceil(w.length / 2);
-    return esc(w.slice(0, cut).join(' ')) + ' <span class="blur" aria-hidden="true">' + esc(w.slice(cut).join(' ')) + '</span><span class="sr"> (fin illisible)</span>';
-  }
   function $(id) { return document.getElementById(id); }
-
-  /* ---------- Scénarios de démo ---------- */
-  function scenario(n) {
-    if (n === 3) return { n: 3, today: 3, res: { 1: 'good', 2: 'missed' }, pick: {}, final: null };
-    var res = {};
-    DAYS.slice(0, 16).forEach(function (d) { res[d] = 'good'; });
-    res[2] = 'missed'; res[9] = 'missed'; res[15] = 'bad';
-    return { n: 23, today: 23, res: res, pick: {}, final: null };
+  function norm(s) {
+    var t = String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    t = t.replace(/^(le|la|les|l|un|une|des|du|en|a|au|aux) /, '');
+    return t.replace(/ /g, '');
   }
-  var S = scenario(3);
-  var fresh = null;
-  var lastFocus = null;
+  function lev(a, b) {
+    var m = a.length, n = b.length, d = [], i, j;
+    for (i = 0; i <= m; i++) { d[i] = [i]; }
+    for (j = 0; j <= n; j++) { d[0][j] = j; }
+    for (i = 1; i <= m; i++) {
+      for (j = 1; j <= n; j++) {
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+    }
+    return d[m][n];
+  }
+  function isRight(input, accepts) {
+    var n = norm(input);
+    if (!n) return false;
+    for (var i = 0; i < accepts.length; i++) {
+      var acc = accepts[i];
+      if (n === acc) return true;
+      if (/^\d+$/.test(acc)) continue;
+      var tol = acc.length <= 4 ? 0 : (acc.length <= 7 ? 1 : 2);
+      if (tol && lev(n, acc) <= tol) return true;
+    }
+    return false;
+  }
+  function tiles(letters, cls, animate) {
+    return '<div class="tiles">' + letters.map(function (L, i) {
+      return '<span class="tl' + (cls ? ' ' + cls : '') + (animate ? ' pop' : '') + '"' + (animate ? ' style="animation-delay:' + (0.15 + i * 0.18).toFixed(2) + 's"' : '') + '>' + esc(L) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  /* ---------- État ---------- */
+  function parisDay() {
+    var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()).split('-');
+    var y = +parts[0], m = +parts[1], d = +parts[2];
+    if (y < 2026 || (y === 2026 && m < 12)) return 0;
+    if (y > 2026) return 99;
+    return d;
+  }
+  var PREVIEW = params.get('jour') ? Math.max(0, Math.min(23, +params.get('jour') || 0)) : null;
+  var KEY = 'avent2026-' + (CODE || 'invite');
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw && PREVIEW === null) return JSON.parse(raw); } catch (err) {}
+    return null;
+  }
+  function save() {
+    if (PREVIEW !== null) return;
+    try { localStorage.setItem(KEY, JSON.stringify({ res: S.res, pick: S.pick, final: S.final, finalAnswer: S.finalAnswer, finalAt: S.finalAt || null })); } catch (err) {}
+  }
+  var saved = load() || {};
+  var S = { today: PREVIEW !== null ? PREVIEW : parisDay(), res: saved.res || {}, pick: saved.pick || {}, final: saved.final || null, finalAnswer: saved.finalAnswer || '', finalAt: saved.finalAt || null };
+  var freshDay = null, lastFocus = null;
+
+  function gained(d) {
+    var r = S.res[d], L = Q[d].l;
+    if (r === 'good') return L;
+    if (r === 'half') return [L[0]];
+    return [];
+  }
+  function allLetters() {
+    var out = [];
+    DAYS.slice(0, 16).forEach(function (d) { out = out.concat(gained(d)); });
+    return out;
+  }
+  function counts() {
+    var opened = 0;
+    DAYS.slice(0, 16).forEach(function (d) { if (S.res[d]) opened++; });
+    if (S.final) opened++;
+    return { opened: opened, letters: allLetters().length };
+  }
 
   /* ---------- Rendu ---------- */
-  function counts() {
-    var opened = 0, good = 0, part = 0;
-    DAYS.slice(0, 16).forEach(function (d) {
-      var r = S.res[d];
-      if (r === 'good' || r === 'bad') opened++;
-      if (r === 'good') good++;
-      if (r === 'bad') part++;
-    });
-    if (S.final) opened++;
-    return { opened: opened, good: good, part: part };
-  }
-
   function renderHead() {
-    $('nameH').textContent = NAME;
-    $('todayLabel').textContent = dayName(S.today);
-    $('lead').textContent = S.today === 23
-      ? "C'est le grand jour ! Rassemble tes indices et réponds à la question finale pour décrocher ton cadeau."
-      : "Chaque jour ouvré, une case s'ouvre avec une question. Une bonne réponse te donne un indice. Le 23 décembre, tes indices t'aideront à répondre à la question finale… et à décrocher ton cadeau.";
+    $('helloH').innerHTML = NAME ? 'Bonjour <strong>' + esc(NAME) + '</strong>,' : 'Bonjour,';
+    $('todayLabel').textContent = S.today >= 1 && S.today <= 31 ? dayName(S.today) : 'Décembre 2026';
+    var lead;
+    if (!PERSON) lead = "Ce calendrier est personnel : ouvre-le avec le lien que tu as reçu par mail.";
+    else if (S.today < 1) lead = "Ton calendrier ouvre le mardi 1er décembre. Chaque jour ouvré, une question, des lettres à gagner, et le 23 décembre une phrase mystère à découvrir.";
+    else if (S.today > 23) lead = "Le calendrier est terminé. Merci d'avoir joué, et joyeuses fêtes !";
+    else if (S.today === 23) lead = "C'est le grand jour ! Remets tes lettres dans l'ordre pour découvrir la phrase mystère.";
+    else lead = "Chaque jour ouvré, une question rien que pour toi. Chaque bonne réponse te donne une ou deux lettres. Le 23 décembre, remets-les dans l'ordre pour découvrir la phrase mystère.";
+    $('lead').textContent = lead;
     var c = counts();
     $('stOpened').textContent = c.opened;
-    $('stIdx').textContent = c.good;
-    $('stIdxNote').textContent = c.part ? ' / 16 · +' + c.part + ' partiel' : ' / 16';
-    $('stFinal').textContent = S.today === 23
-      ? (S.final === 'win' ? 'Gagné !' : (S.final === 'lose' ? 'Terminé' : "Aujourd'hui"))
-      : 'J-' + (23 - S.today);
+    $('stIdx').textContent = c.letters;
+    var jLeft = (S.today >= 1 && S.today <= 23) ? 23 - S.today : Math.max(0, Math.ceil((Date.UTC(2026, 11, 22, 23, 0, 0) - Date.now()) / 86400000));
+    $('stFinal').textContent = S.final === 'win' ? 'Trouvée !' : (S.final === 'lose' ? 'Terminé' : (S.today === 23 ? "Aujourd'hui" : (S.today > 23 ? 'Terminé' : 'J-' + jLeft)));
   }
 
   function renderGrid() {
@@ -544,29 +592,30 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       var n = caseOf(d), isFinal = d === 23, r = S.res[d];
       var cls = 'cell', sub = '', icon = '', bow = false, live = false;
       if (isFinal) {
-        cls += ' final';
-        icon = I.star;
+        cls += ' final'; icon = I.star;
         if (S.today === 23) {
           live = true; cls += ' live';
-          sub = S.final === 'win' ? 'Gagné !' : (S.final === 'lose' ? 'Terminé' : "C'est le jour !");
+          sub = S.final === 'win' ? 'Trouvée !' : (S.final === 'lose' ? 'Terminé' : "C'est le jour !");
           if (!S.final) bow = true;
-        } else sub = 'Finale';
+        } else sub = 'Phrase mystère';
+      } else if (r) {
+        live = d === S.today;
+        if (r === 'good') { cls += ' done'; sub = Q[d].l.length === 2 ? '2 lettres' : '1 lettre'; icon = I.starGold; }
+        else if (r === 'half') { cls += ' partial'; sub = '1 lettre sur 2'; icon = I.check; }
+        else { cls += ' missed'; sub = 'Pas de lettre'; icon = I.miss; }
+        if (live) cls += ' again';
       } else if (d < S.today) {
-        if (r === 'good') { cls += ' done'; sub = 'Indice récupéré'; icon = I.starGold; }
-        else if (r === 'bad') { cls += ' partial'; sub = 'Indice partiel'; icon = I.check; }
-        else { cls += ' missed'; sub = 'Manquée'; icon = I.miss; }
+        cls += ' missed'; sub = 'Manquée'; icon = I.miss;
       } else if (d === S.today) {
-        live = true;
-        if (r) { cls += (r === 'good' ? ' done' : ' partial') + ' again'; sub = r === 'good' ? 'Indice récupéré' : 'Indice partiel'; icon = r === 'good' ? I.starGold : I.check; }
-        else { cls += ' today'; sub = 'Ouvre-moi'; icon = ''; bow = true; }
+        live = true; cls += ' today'; sub = 'Ouvre-moi'; bow = true;
       } else {
         cls += ' future w' + (n % 4); sub = 'Verrouillée'; icon = I.lock;
       }
+      if (!PERSON) live = false;
       var b = document.createElement('button');
       b.type = 'button';
       b.className = cls;
       b.disabled = !live;
-      b.dataset.day = d;
       b.setAttribute('aria-label', (live && !r && !S.final ? 'Ouvrir la case du ' : 'Case du ') + dayName(d) + ' : ' + sub);
       b.innerHTML = '<span class="ctop"><span class="num">' + d + '</span>' + icon + '</span>' +
         '<span class="cb"><span class="sub">' + sub + '</span><span class="cl">' + (isFinal ? 'Le cadeau' : 'Case ' + n) + '</span></span>' +
@@ -580,19 +629,23 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     var g = $('idxGrid');
     g.innerHTML = '';
     DAYS.slice(0, 16).forEach(function (d, i) {
-      var k = i + 1, r = S.res[d], cls = 'ic', t, extra = '';
-      if (r === 'good') { cls += ' got'; t = esc(CLUES[i]); }
-      else if (r === 'bad') { cls += ' got'; t = partial(CLUES[i]); }
-      else if (d < S.today) { cls += ' miss'; t = 'Case manquée'; }
-      else { cls += ' w' + (k % 4); t = d === S.today ? "Aujourd'hui" : 'Le ' + d + ' déc.'; extra = I.lockSm; }
-      if (fresh === d) cls += ' new';
+      var k = i + 1, r = S.res[d], cls = 'ic', body, extra = '', nb = Q[d].l.length;
+      if (r === 'good') { cls += ' got'; body = tiles(gained(d), '', freshDay === d); }
+      else if (r === 'half') { cls += ' got'; body = tiles(gained(d), '', freshDay === d) + '<div class="t" style="margin-top:6px">1 lettre sur 2</div>'; }
+      else if (r === 'bad') { cls += ' miss'; body = '<div class="t">Pas de lettre ce jour-là</div>'; }
+      else if (d < S.today) { cls += ' miss'; body = '<div class="t">Case manquée</div>'; }
+      else {
+        cls += ' w' + (k % 4); extra = I.lockSm;
+        body = '<div class="t">' + (d === S.today ? "Aujourd'hui" : 'Le ' + d + ' déc.') + ' · ' + nb + (nb === 2 ? ' lettres' : ' lettre') + ' à gagner</div>';
+      }
+      if (freshDay === d) cls += ' new';
       var el = document.createElement('div');
       el.className = cls;
       el.style.setProperty('--rot', ['-0.8deg', '0.6deg', '-0.4deg', '0.9deg'][i % 4]);
-      el.innerHTML = '<div class="k"><span>Indice ' + k + (r === 'bad' ? ' · partiel' : '') + '</span>' + extra + '</div><div class="t">' + t + '</div>';
+      el.innerHTML = '<div class="k"><span>Case ' + k + '</span>' + extra + '</div>' + body;
       g.appendChild(el);
     });
-    fresh = null;
+    freshDay = null;
   }
 
   function renderAll() { renderHead(); renderGrid(); renderIdx(); }
@@ -632,117 +685,15 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 2600);
   }
 
-  /* Case du jour */
-  function openDay(d) {
-    var Q = QUESTIONS[d] || DEFAULT_Q, n = caseOf(d), r = S.res[d];
-    var html = '<div class="dlg-head"><span class="kicker">Case ' + n + ' · ' + dayName(d) + '</span>' +
-      '<button type="button" class="x" data-close aria-label="Fermer">' + I.close + '</button></div>' +
-      '<span class="tag">Question du jour · exemple</span>' +
-      '<h3 class="q" id="dayQ">' + esc(Q.q) + '</h3>' +
-      '<div class="choices" role="group" aria-labelledby="dayQ">' +
-      Q.choices.map(function (c, i) { return '<button type="button" class="choice" data-i="' + i + '" aria-pressed="false">' + esc(c) + '</button>'; }).join('') +
-      '</div>' +
-      '<button type="button" class="primary" id="daySubmit" disabled>Valider ma réponse</button>' +
-      '<p class="fine" id="dayFine">Une seule réponse possible. La case se referme à minuit.</p>' +
-      '<div id="dayResult" aria-live="polite"></div>';
-    $('dayBody').innerHTML = html;
-    var picked = null;
-    var choiceBtns = $('dayBody').querySelectorAll('.choice');
-    Array.prototype.forEach.call(choiceBtns, function (btn) {
-      btn.addEventListener('click', function () {
-        picked = Q.choices[+btn.dataset.i];
-        Array.prototype.forEach.call(choiceBtns, function (o) { o.setAttribute('aria-pressed', o === btn ? 'true' : 'false'); });
-        $('daySubmit').disabled = false;
-      });
-    });
-    $('daySubmit').addEventListener('click', function () {
-      if (!picked) return;
-      S.pick[d] = picked;
-      S.res[d] = picked === Q.answer ? 'good' : 'bad';
-      fresh = d;
-      showDayResult(d, Q, picked, true);
-      renderAll();
-    });
-    $('dayBody').querySelector('[data-close]').addEventListener('click', function () { closeModal('dayModal'); });
-    if (r) showDayResult(d, Q, S.pick[d] || Q.answer, false);
-    openModal('dayModal', r ? '[data-close]' : '.choice');
-  }
-
-  function showDayResult(d, Q, picked, animate) {
-    var n = caseOf(d), ok = picked === Q.answer;
-    Array.prototype.forEach.call($('dayBody').querySelectorAll('.choice'), function (btn) {
-      var v = Q.choices[+btn.dataset.i];
-      btn.disabled = true;
-      btn.setAttribute('aria-pressed', v === picked ? 'true' : 'false');
-      if (v === Q.answer) btn.classList.add('right');
-      else if (v === picked) btn.classList.add('wrong');
-    });
-    $('daySubmit').hidden = true;
-    $('dayFine').hidden = true;
-    var res = $('dayResult');
-    res.innerHTML = ok
-      ? '<div class="res-title">' + I.checkLg + 'Bonne réponse !</div>' +
-        '<div class="clue" id="clueCard"><div class="k">Ton indice n°' + n + '</div><div class="t">' + esc(CLUES[n - 1]) + '</div></div>' +
-        '<button type="button" class="ghost" data-close2>Retour au calendrier</button>'
-      : '<div class="res-title">Raté ! La bonne réponse était ' + esc(Q.answer) + '.</div>' +
-        '<div class="clue part"><div class="k">Indice n°' + n + ', partiel</div><div class="t">' + partial(CLUES[n - 1]) + '</div><small>Une partie seulement reste lisible. Rendez-vous demain !</small></div>' +
-        '<button type="button" class="ghost" data-close2>Retour au calendrier</button>';
-    res.querySelector('[data-close2]').addEventListener('click', function () { closeModal('dayModal'); });
-    if (animate) {
-      if (ok) burst($('clueCard'), 28, 170, ['#CE122D', '#D9AE4E', '#FFFFFF', '#F5D27A']);
-      else {
-        var dlg = $('dayDialog');
-        dlg.classList.remove('shake'); void dlg.offsetWidth; dlg.classList.add('shake');
-      }
-      res.querySelector('[data-close2]').focus();
-    }
-  }
-
-  /* Question finale */
-  function openFinal() {
-    var got = 0;
-    var items = DAYS.slice(0, 16).map(function (d, i) {
-      var r = S.res[d];
-      if (r === 'good') { got++; return '<li><b>' + (i + 1) + '</b><span>' + esc(CLUES[i]) + '</span></li>'; }
-      if (r === 'bad') { return '<li><b>' + (i + 1) + '</b><span>' + partial(CLUES[i]) + '</span></li>'; }
-      return '<li class="miss"><b>' + (i + 1) + '</b><span>Indice manqué</span></li>';
-    }).join('');
-    var done = !!S.final;
-    $('finalBody').innerHTML =
-      '<div class="fin-top">' +
-        '<span class="kicker">Case 17 · ' + dayName(23) + '</span>' +
-        '<h3>La question <strong>finale</strong></h3>' +
-        '<p>' + (done ? 'Tu as déjà répondu à la question finale.' : 'Tu as ' + got + ' indices complets. Une seule tentative pour trouver la réponse.') + '</p>' +
-        '<button type="button" class="x" data-close aria-label="Fermer">' + I.close + '</button>' +
-      '</div>' +
-      '<div class="dlg-body">' +
-        '<span class="tag" style="margin-top:0">Exemple</span>' +
-        '<h3 class="q" style="margin-bottom:0">' + esc(FINAL.q) + '</h3>' +
-        '<div class="fin-label">Tes indices</div>' +
-        '<ol class="fin-clues">' + items + '</ol>' +
-        (done
-          ? '<p class="fine" style="text-align:left;font-size:15px;color:#202326">Ta réponse : <strong>' + esc(S.finalAnswer) + '</strong> · ' + (S.final === 'win' ? 'gagné !' : 'ce n\'était pas ça.') + '</p>' +
-            '<button type="button" class="ghost" data-close2>Retour au calendrier</button>'
-          : '<label class="lbl" for="finalInput">Ta réponse</label>' +
-            '<input class="inp" id="finalInput" type="text" autocomplete="off" placeholder="Écris ta réponse ici">' +
-            '<button type="button" class="primary" id="finalSubmit" disabled>Valider ma réponse finale</button>' +
-            '<p class="fine" id="finalFine">Majuscules et accents ne comptent pas.</p>') +
-      '</div>';
-    var fb = $('finalBody');
-    fb.querySelector('[data-close]').addEventListener('click', function () { closeModal('finalModal'); });
-    if (done) {
-      fb.querySelector('[data-close2]').addEventListener('click', function () { closeModal('finalModal'); });
-      openModal('finalModal', '[data-close]');
-      return;
-    }
-    var inp = $('finalInput'), btn = $('finalSubmit'), fine = $('finalFine'), confirming = false;
-    function resetConfirm() {
+  function confirmFlow(inp, btn, fine, label, hint, onConfirm) {
+    var confirming = false;
+    function reset() {
       confirming = false;
       btn.classList.remove('confirm');
-      btn.textContent = 'Valider ma réponse finale';
-      fine.textContent = 'Majuscules et accents ne comptent pas.';
+      btn.textContent = label;
+      fine.textContent = hint;
     }
-    inp.addEventListener('input', function () { btn.disabled = !inp.value.trim(); resetConfirm(); });
+    inp.addEventListener('input', function () { btn.disabled = !inp.value.trim(); reset(); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !btn.disabled) btn.click(); });
     btn.addEventListener('click', function () {
       var val = inp.value.trim();
@@ -754,9 +705,106 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
         fine.textContent = "Dernière chance de changer d'avis : tu n'auras pas d'autre essai.";
         return;
       }
-      var win = FINAL.accept.indexOf(norm(val)) !== -1;
+      onConfirm(val);
+    });
+  }
+
+  /* Case du jour */
+  function openDay(d) {
+    var n = caseOf(d), q = Q[d], nb = q.l.length;
+    $('dayBody').innerHTML =
+      '<div class="dlg-head"><span class="kicker">Case ' + n + ' · ' + dayName(d) + '</span>' +
+      '<button type="button" class="x" data-close aria-label="Fermer">' + I.close + '</button></div>' +
+      '<span class="tag">' + (nb === 2 ? '2 lettres à gagner · 1 seule si tu te trompes' : '1 lettre à gagner · aucune si tu te trompes') + '</span>' +
+      '<h3 class="q" id="dayQ">' + esc(q.q) + '</h3>' +
+      '<div id="dayForm">' +
+        '<label class="lbl" for="dayInput" style="margin-top:0">Ta réponse</label>' +
+        '<input class="inp" id="dayInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Un seul mot">' +
+        '<button type="button" class="primary" id="daySubmit" disabled>Valider ma réponse</button>' +
+        '<p class="fine" id="dayFine">Un seul mot. Accents et majuscules ne comptent pas.</p>' +
+      '</div>' +
+      '<div id="dayResult" aria-live="polite"></div>';
+    $('dayBody').querySelector('[data-close]').addEventListener('click', function () { closeModal('dayModal'); });
+    if (S.res[d]) {
+      showDayResult(d, false);
+      openModal('dayModal', '[data-close]');
+      return;
+    }
+    confirmFlow($('dayInput'), $('daySubmit'), $('dayFine'), 'Valider ma réponse', 'Un seul mot. Accents et majuscules ne comptent pas.', function (val) {
+      var ok = isRight(val, q.a);
+      S.res[d] = ok ? 'good' : (nb === 2 ? 'half' : 'bad');
+      S.pick[d] = val;
+      freshDay = d;
+      save();
+      showDayResult(d, true);
+      renderAll();
+    });
+    openModal('dayModal', '#dayInput');
+  }
+
+  function showDayResult(d, animate) {
+    var q = Q[d], r = S.res[d], got = gained(d);
+    $('dayForm').hidden = true;
+    var you = S.pick[d] ? '<p class="fine" style="text-align:left;margin:0 0 10px">Ta réponse : <strong>' + esc(S.pick[d]) + '</strong></p>' : '';
+    var html;
+    if (r === 'good') {
+      html = you + '<div class="res-title">' + I.checkLg + 'Bonne réponse !</div>' +
+        '<div class="clue" id="clueCard"><div class="k">' + (got.length === 2 ? 'Tu gagnes deux lettres' : 'Tu gagnes une lettre') + '</div>' + tiles(got, 'gold', animate) + '</div>';
+    } else if (r === 'half') {
+      html = you + '<div class="res-title">Raté, c\'était ' + esc(q.show) + '.</div>' +
+        '<div class="clue part"><div class="k">Une lettre quand même, pour ta régularité</div>' + tiles(got, '', animate) + '</div>';
+    } else {
+      html = you + '<div class="res-title">Raté, c\'était ' + esc(q.show) + '.</div>' +
+        '<div class="clue part"><div class="k">Pas de lettre aujourd\'hui</div><div class="t">Rendez-vous au prochain jour ouvré !</div></div>';
+    }
+    html += '<button type="button" class="ghost" data-close2>Retour au calendrier</button>';
+    var res = $('dayResult');
+    res.innerHTML = html;
+    res.querySelector('[data-close2]').addEventListener('click', function () { closeModal('dayModal'); });
+    if (animate) {
+      if (r === 'good') burst($('clueCard'), 28, 170, ['#CE122D', '#D9AE4E', '#FFFFFF', '#F5D27A']);
+      else {
+        var dlg = $('dayDialog');
+        dlg.classList.remove('shake'); void dlg.offsetWidth; dlg.classList.add('shake');
+      }
+      res.querySelector('[data-close2]').focus();
+    }
+  }
+
+  /* Phrase finale */
+  function openFinal() {
+    var letters = allLetters(), done = !!S.final;
+    $('finalBody').innerHTML =
+      '<div class="fin-top">' +
+        '<span class="kicker">Case 17 · ' + dayName(23) + '</span>' +
+        '<h3>La phrase <strong>mystère</strong></h3>' +
+        '<p>' + FINAL.letters + ' lettres, ' + FINAL.words + ' mots. Tu en as ' + letters.length + '. Une seule tentative.</p>' +
+        '<button type="button" class="x" data-close aria-label="Fermer">' + I.close + '</button>' +
+      '</div>' +
+      '<div class="dlg-body">' +
+        '<div class="fin-label" style="margin-top:0">Tes lettres</div>' +
+        (letters.length ? tiles(letters, 'gold', false) : '<p class="fine" style="text-align:left">Aucune lettre pour l\'instant.</p>') +
+        (done
+          ? '<p class="fine" style="text-align:left;font-size:15px;color:#202326;margin-top:18px">Ta réponse : <strong>' + esc(S.finalAnswer) + '</strong></p>' +
+            '<button type="button" class="ghost" data-close2>Retour au calendrier</button>'
+          : '<label class="lbl" for="finalInput">Ta phrase</label>' +
+            '<input class="inp" id="finalInput" type="text" autocomplete="off" spellcheck="false" placeholder="Écris la phrase ici">' +
+            '<button type="button" class="primary" id="finalSubmit" disabled>Valider ma phrase</button>' +
+            '<p class="fine" id="finalFine">Accents, majuscules et petites fautes ne comptent pas.</p>') +
+      '</div>';
+    var fb = $('finalBody');
+    fb.querySelector('[data-close]').addEventListener('click', function () { closeModal('finalModal'); });
+    if (done) {
+      fb.querySelector('[data-close2]').addEventListener('click', function () { closeModal('finalModal'); });
+      openModal('finalModal', '[data-close]');
+      return;
+    }
+    confirmFlow($('finalInput'), $('finalSubmit'), $('finalFine'), 'Valider ma phrase', 'Accents, majuscules et petites fautes ne comptent pas.', function (val) {
+      var win = isRight(val, FINAL.accept);
       S.final = win ? 'win' : 'lose';
       S.finalAnswer = val;
+      S.finalAt = new Date().toISOString();
+      save();
       $('finalModal').hidden = true;
       renderAll();
       celebrate(win);
@@ -764,7 +812,6 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     openModal('finalModal', '#finalInput');
   }
 
-  /* Animation finale */
   var celTimers = [];
   function celebrate(win) {
     var cel = $('cel');
@@ -777,10 +824,10 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     cel.classList.add(win ? 'win' : 'lose');
     $('celTitle').innerHTML = win ? 'Bravo <strong>' + esc(NAME) + '</strong> !' : 'Presque, <strong>' + esc(NAME) + '</strong>…';
     $('celText').textContent = win
-      ? 'La réponse était bien : ' + FINAL.display + '. Tes indices ont payé !'
-      : 'La bonne réponse était : ' + FINAL.display + '. Merci d\'avoir joué jusqu\'au bout !';
+      ? 'La phrase était bien : « ' + FINAL.display + ' ».'
+      : 'La phrase était : « ' + FINAL.display + ' ». Merci d\'avoir joué jusqu\'au bout !';
     $('giftCard').hidden = !win;
-    $('giftText').textContent = FINAL.gift;
+    $('giftText').textContent = 'Célia annonce le ou les gagnants très vite.';
     if (win) {
       celTimers.push(setTimeout(function () { burst($('confBox'), 90, 420, ['#CE122D', '#D9AE4E', '#FFFFFF', '#F5D27A', '#B50F27']); }, 2050));
       celTimers.push(setTimeout(function () { burst($('confBox'), 50, 300, ['#FFFFFF', '#F5D27A', '#CE122D']); }, 2600));
@@ -797,7 +844,6 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   }
   $('celClose').addEventListener('click', closeCel);
 
-  /* Clavier */
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (!$('cel').hidden) closeCel();
@@ -808,18 +854,10 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     $(id).addEventListener('click', function (e) { if (e.target === e.currentTarget) closeModal(id); });
   });
 
-  /* Démo */
-  var demoBtns = document.querySelectorAll('.demo-btn[data-scn]');
-  function setScenario(n) {
-    S = scenario(n);
-    Array.prototype.forEach.call(demoBtns, function (b) { b.setAttribute('aria-pressed', +b.dataset.scn === n ? 'true' : 'false'); });
-    ['dayModal', 'finalModal'].forEach(function (id) { $(id).hidden = true; });
-    if (!$('cel').hidden) closeCel();
-    document.body.style.overflow = '';
-    renderAll();
+  if (PREVIEW !== null) {
+    $('previewBar').hidden = false;
+    $('previewTxt').textContent = 'Aperçu au ' + (S.today >= 1 ? dayName(S.today) : 'lancement') + ' · les réponses ne sont pas enregistrées';
   }
-  Array.prototype.forEach.call(demoBtns, function (b) { b.addEventListener('click', function () { setScenario(+b.dataset.scn); }); });
-  $('demoReset').addEventListener('click', function () { setScenario(S.n); });
 
   /* ---------- Décor ---------- */
   function garland(el) {
