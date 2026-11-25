@@ -281,6 +281,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   <div class="wrap demo-in">
     <span class="demo-tag">Aperçu</span>
     <span class="demo-txt" id="previewTxt"></span>
+    <button type="button" class="demo-btn" id="resetBtn" hidden>Recommencer le test</button>
   </div>
 </div>
 
@@ -346,7 +347,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   <div class="step"><span class="step-n">1</span><div><b>Ouvre la case du jour</b><span>Une case par jour ouvré, du 1er au 22 décembre. Elle se referme à minuit.</span></div></div>
   <div class="step"><span class="step-n">2</span><div><b>Réponds en un mot</b><span>Une seule tentative. Accents et majuscules ne comptent pas.</span></div></div>
   <div class="step"><span class="step-n">3</span><div><b>Gagne tes lettres</b><span>Case à 2 lettres : une erreur ne t'en donne qu'une. Case à 1 lettre : une erreur ne donne rien.</span></div></div>
-  <div class="step"><span class="step-n">4</span><div><b>Trouve la phrase</b><span id="step4">Le 23 décembre, remets tes lettres dans l'ordre. Le premier qui trouve gagne une surprise.</span></div></div>
+  <div class="step"><span class="step-n">4</span><div><b>Trouve la phrase</b><span id="step4">Le 23 décembre, remets tes lettres dans l'ordre pour découvrir la phrase et participer à la surprise.</span></div></div>
 </section>
 
 <div class="winter">
@@ -474,7 +475,7 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   }
 
   /* ---------- État ---------- */
-  var S = { ready: false, err: false, today: 0, res: {}, pick: {}, got: {}, final: null, finalAnswer: '', finalAt: null };
+  var S = { demo: false, ready: false, err: false, today: 0, res: {}, pick: {}, got: {}, final: null, finalAnswer: '', finalAt: null };
   var freshDay = null, lastFocus = null;
 
   function api(q) {
@@ -502,9 +503,11 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       $('step4').textContent = "Le 23 décembre, remets tes lettres dans l'ordre pour découvrir la phrase. Une surprise t'attend.";
     }
     $('stMax').textContent = ' / ' + FINAL.letters;
-    if (st.demo) {
+    S.demo = !!st.demo;
+    if (S.demo) {
       $('previewBar').hidden = false;
-      $('previewTxt').textContent = 'Version test · calendrier simulé au ' + (S.today >= 1 && S.today <= 31 ? dayName(S.today) : 'lancement') + ' · questions de démonstration';
+      $('previewTxt').textContent = 'Version test · toutes les cases sont ouvertes · rien ne compte pour le vrai jeu';
+      $('resetBtn').hidden = false;
     }
     S.ready = true;
   }
@@ -525,12 +528,13 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
   /* ---------- Rendu ---------- */
   function renderHead() {
     $('helloH').innerHTML = NAME ? 'Bonjour <strong>' + esc(NAME) + '</strong>,' : 'Bonjour,';
-    $('todayLabel').textContent = S.today >= 1 && S.today <= 31 ? dayName(S.today) : 'Décembre 2026';
+    $('todayLabel').textContent = S.demo ? 'Version test' : (S.today >= 1 && S.today <= 31 ? dayName(S.today) : 'Décembre 2026');
     var lead;
     if (!CODE) lead = "Ce calendrier est personnel : ouvre-le avec le lien que tu as reçu par mail.";
     else if (S.err === 'unknown') lead = "Ce lien n'est pas reconnu. Ouvre ton calendrier avec le lien reçu par mail.";
     else if (S.err) lead = "Impossible de charger ton calendrier pour l'instant. Recharge la page dans un moment.";
     else if (!S.ready) lead = "Chargement de ton calendrier…";
+    else if (S.demo) lead = "Version test : toutes les cases sont ouvertes d'un coup. Réponds dans l'ordre que tu veux, regarde les lettres tomber, puis tente la phrase mystère.";
     else if (S.today < 1) lead = "Ton calendrier ouvre le mardi 1er décembre. Chaque jour ouvré, une question, des lettres à gagner, et le 23 décembre une phrase mystère à découvrir.";
     else if (S.today > 23) lead = "Le calendrier est terminé. Merci d'avoir joué, et joyeuses fêtes !";
     else if (S.today === 23) lead = "C'est le grand jour ! Remets tes lettres dans l'ordre pour découvrir la phrase mystère.";
@@ -565,14 +569,14 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
           if (!S.final) bow = true;
         } else sub = 'Phrase mystère';
       } else if (r) {
-        live = d === S.today;
+        live = d === S.today || S.demo;
         if (r === 'good') { cls += ' done'; sub = Q[d].n === 2 ? '2 lettres' : '1 lettre'; icon = I.starGold; }
         else if (r === 'half') { cls += ' partial'; sub = '1 lettre sur 2'; icon = I.check; }
         else { cls += ' missed'; sub = 'Pas de lettre'; icon = I.miss; }
         if (live) cls += ' again';
-      } else if (d < S.today) {
+      } else if (d < S.today && !S.demo) {
         cls += ' missed'; sub = 'Manquée'; icon = I.miss;
-      } else if (d === S.today) {
+      } else if (d === S.today || S.demo) {
         live = true; cls += ' today'; sub = 'Ouvre-moi'; bow = true;
       } else {
         cls += ' future w' + (n % 4); sub = 'Verrouillée'; icon = I.lock;
@@ -599,10 +603,10 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
       if (r === 'good') { cls += ' got'; body = tiles(gained(d), '', freshDay === d); }
       else if (r === 'half') { cls += ' got'; body = tiles(gained(d), '', freshDay === d) + '<div class="t" style="margin-top:6px">1 lettre sur 2</div>'; }
       else if (r === 'bad') { cls += ' miss'; body = '<div class="t">Pas de lettre ce jour-là</div>'; }
-      else if (S.ready && d < S.today) { cls += ' miss'; body = '<div class="t">Case manquée</div>'; }
+      else if (S.ready && !S.demo && d < S.today) { cls += ' miss'; body = '<div class="t">Case manquée</div>'; }
       else {
         cls += ' w' + (k % 4); extra = I.lockSm;
-        body = '<div class="t">' + (d === S.today ? "Aujourd'hui" : 'Le ' + d + ' déc.') + ' · ' + nb + (nb === 2 ? ' lettres' : ' lettre') + ' à gagner</div>';
+        body = '<div class="t">' + (d === S.today || S.demo ? "Aujourd'hui" : 'Le ' + d + ' déc.') + ' · ' + nb + (nb === 2 ? ' lettres' : ' lettre') + ' à gagner</div>';
       }
       if (freshDay === d) cls += ' new';
       var el = document.createElement('div');
@@ -826,6 +830,13 @@ h2 svg{animation:twinkle 3s ease-in-out infinite}
     if (f) f.focus();
   }
   $('celClose').addEventListener('click', closeCel);
+  var resetArmed = false;
+  $('resetBtn').addEventListener('click', function () {
+    var btn = $('resetBtn');
+    if (!resetArmed) { resetArmed = true; btn.textContent = 'Sûre ? Tout effacer'; setTimeout(function () { resetArmed = false; btn.textContent = 'Recommencer le test'; }, 4000); return; }
+    resetArmed = false; btn.disabled = true; btn.textContent = 'Remise à zéro…';
+    api('a=reset').then(function () { return api('a=state'); }).then(function (st) { applyState(st); renderAll(); }).catch(function () {}).then(function () { btn.disabled = false; btn.textContent = 'Recommencer le test'; });
+  });
 
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
